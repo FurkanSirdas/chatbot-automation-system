@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+    .card:hover {
+        transform: scale(1.03);
+        transition: 0.2s;
+        cursor: pointer;
+        }
+    </style>
+
+
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <h2 class="mb-4">🤖 Admin Panel</h2>
+
+    {% if request.args.get("success") == "intent_added" %}
+    <div style="background:#d4edda; color:#155724; padding:10px; border-radius:5px; margin-bottom:10px;">
+        Intent başarıyla eklendi ✔
+    </div>
+        {% endif %}
+
+        {% if request.args.get("success") == "alias_added" %}
+    <div style="background:#d4edda; color:#155724; padding:10px; border-radius:5px; margin-bottom:10px;">
+        Alias başarıyla eklendi ✔
+    </div>
+        {% endif %}
+
+    {% if request.args.get("success") == "response_added" %}
+    <div style="background:#d4edda; color:#155724; padding:10px; border-radius:5px; margin-bottom:10px;">
+        Cevap başarıyla eklendi ✔
+    </div>
+        {% endif %}
+
+    <div class="row g-4">
+
+        <form method="GET" action="/admin">
+            <select name="user_id" class="form-control mb-3">
+                {% for u in users %}
+                <option value="{{ u[0] }}" {% if u[0] == selected_user_id %}selected{% endif %}>
+                    {{ u[1] }} (ID: {{ u[0] }})
+                </option>
+                    {% endfor %}
+            </select>
+
+    <button class="btn btn-dark">Seç</button>
+</form>
+        
+        <h5>👤 Kullanıcı Ekle</h5>
+            <form method="POST" action="/add-user" class="mb-3">
+                <input class="form-control mb-2" name="name" placeholder="Kullanıcı adı">
+                <input class="form-control mb-2" name="instagram_id" placeholder="Instagram ID">
+                <button class="btn btn-primary w-100">Ekle</button>
+            </form>
+        <ul class="list-group mb-4">
+            {% for u in users %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ u[1] }} 
+            <a href="/delete-user/{{ u[0] }}" class="btn btn-sm btn-danger">Sil</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- INTENT -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5>📌 Intent Ekle</h5>
+                    {% if request.args.get("error") == "intent_exists" %}
+                    <div style="color:red;">Bu intent zaten var!</div>
+                    {% endif %}
+                    <form method="POST" action="/add-intent">
+                        <input class="form-control mb-2" name="name" placeholder="Intent adı">
+                        <input type="hidden" name="user_id" value="{{ selected_user_id }}">
+                        <button class="btn btn-primary w-100">Ekle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALIAS -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5>🔗 Alias Ekle</h5>
+                    {% if request.args.get("error") == "alias_exists" %}
+                    <div style="color:red;">Bu alias zaten var!</div>
+                    {% endif %}
+                    {% if request.args.get("error") == "alias" %}
+                    <div style="color:red; margin-bottom:10px;">
+                     Alias boş olamaz!
+                    </div>
+                    {% endif %}
+                    <form method="POST" action="/add-alias">
+                        <select name="intent_id" class="form-control mb-2">
+                        <option disabled selected>Intent seç</option>
+                        {% for i in intents %}
+                        <option value="{{ i[0] }}">{{ i[1] }}</option>
+                        {% endfor %}
+                        </select>
+
+                        <input class="form-control mb-2" name="text" placeholder="Alias">
+                        <input type="hidden" name="user_id" value="{{ selected_user_id }}">
+                        <button class="btn btn-success w-100">Ekle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESPONSE -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5>💬 Cevap Ekle</h5>
+                    {% if request.args.get("error") == "response_exists" %}
+                    <div style="color:red;">Bu cevap zaten var!</div>
+                    {% endif %}
+                    {% if request.args.get("error") == "response" %}
+                    <div style="color:red; margin-bottom:10px;">
+                    Cevap boş olamaz!
+                    </div>
+                    {% endif %}
+                    <form method="POST" action="/add-response">
+                        
+                        <select name="intent_id" class="form-control mb-2">
+                        <option disabled selected>Intent seç</option>
+                        {% for i in intents %}
+                        <option value="{{ i[0] }}">{{ i[1] }}</option>
+                        {% endfor %}
+                        </select>
+
+                        <input class="form-control mb-2" name="text" placeholder="Cevap">
+                        <input type="hidden" name="user_id" value="{{ selected_user_id }}">
+                        <button class="btn btn-warning w-100">Ekle</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <hr class="my-5">
+
+    <!-- NAV BUTTONS -->
+    <div class="row mt-4 g-3">
+
+        <div class="col-md-4">
+            <a href="/intents?user_id={{ selected_user_id }}" class="text-decoration-none">
+                <div class="card shadow-sm text-center p-3 border-primary">
+                <h5 class="text-primary">📌 Intentler</h5>
+        </div>
+</a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/aliases?user_id={{ selected_user_id }}" class="text-decoration-none">
+                <div class="card shadow-sm text-center p-3 border-success">
+                <h5 class="text-success">🔗 Aliaslar</h5>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/responses?user_id={{ selected_user_id }}" class="text-decoration-none">
+                <div class="card shadow-sm text-center p-3 border-warning">
+                <h5 class="text-warning">💬 Cevaplar</h5>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
